@@ -489,6 +489,20 @@ document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.shiftKey&&e.key.toLowerC
     <p class="auth-note">This local admin view is for frontend testing. Before launch, move authentication, orders and payment verification to a secure backend.</p>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+  const SUPABASE_URL = "https://cflbppmzeauepzsydusf.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_r1tueBq4I7vmJhCJ-xiLpg_gJPmn1sI";
+
+  const { createClient } = supabase;
+
+  const supabaseClient = createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  console.log("Supabase connected");
+</script>
 </body>
 </html>
