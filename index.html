@@ -311,7 +311,7 @@ function updateTimer(){let m=String(Math.floor(seconds/60)).padStart(2,"0"),s=St
 function updateQR(){let text=address.value==="YOUR_USDT_TRC20_ADDRESS"?"USDT TRC20 ADDRESS REQUIRED":address.value;qr.src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data="+encodeURIComponent(text)}
 function closePay(){clearInterval(timerId);payOverlay.classList.remove("show");payOverlay.classList.add("hidden")}
 function copyAddr(){navigator.clipboard?.writeText(address.value);alert("Address copied.")}
-function markPaid(){if(address.value==="YOUR_USDT_TRC20_ADDRESS"){alert("Please add your real USDT TRC20 address in the HTML first.");return}if(!email.value.trim()||!email.value.includes("@")){alert("Please enter a valid recipient email.");return}if(!txid.value.trim()){alert("Please enter the transaction hash / TxID.");return}orders.unshift({id:"NX-"+Date.now().toString().slice(-7),product:selected?.[0]||"Custom order",amount:selected?.[2]||0,email:email.value.trim(),status:"Awaiting payment confirmation",date:new Date().toLocaleString()});localStorage.setItem("nx_orders",JSON.stringify(orders));render();closePay();successOverlay.classList.remove("hidden");successOverlay.classList.add("show")}
+function markPaid(){if(address.value==="YOUR_USDT_TRC20_ADDRESS"){alert("Please add your real USDT TRC20 address in the HTML first.");return}if(!email.value.trim()||!email.value.includes("@")){alert("Please enter a valid recipient email.");return}if(!txid.value.trim()){alert("Please enter the transaction hash / TxID.");return}const order={id:"NX-"+Date.now().toString().slice(-7),product:selected?.[0]||"Custom order",amount:selected?.[2]||0,email:email.value.trim(),txid:txid.value.trim(),status:"Awaiting payment confirmation",date:new Date().toLocaleString(),createdAt:new Date().toISOString()};orders.unshift(order);localStorage.setItem("nx_orders",JSON.stringify(orders));try{const db=nxDB();if(!db.orders.some(o=>o.id===order.id)){db.orders.unshift(order)}saveNXDB(db)}catch(e){}render();closePay();successOverlay.classList.remove("hidden");successOverlay.classList.add("show")}
 function closeSuccess(){successOverlay.classList.remove("show");successOverlay.classList.add("hidden");go("orders")}
 function renderOrders(){let box=document.getElementById("ordersBox"),pbox=document.getElementById("paymentsBox");if(!orders.length){box.className="empty";box.textContent="No orders yet.";pbox.className="empty";pbox.textContent="No payment submissions yet.";return}box.className="";box.innerHTML=`<table class="table"><tr><th>Order</th><th>Product</th><th>Email</th><th>Status</th></tr>${orders.map(o=>`<tr><td>${o.id}</td><td>${o.product}</td><td>${o.email}</td><td style="color:#fbbf24">${o.status}</td></tr>`).join("")}</table>`;pbox.className="";pbox.innerHTML=`<table class="table"><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th></tr>${orders.map(o=>`<tr><td>${o.id}</td><td>$${Number(o.amount).toFixed(2)}</td><td>USDT TRC20</td><td style="color:#fbbf24">Manual confirmation</td></tr>`).join("")}</table>`}
 search.oninput=()=>{let q=search.value.toLowerCase();go("market");document.querySelectorAll("#products .card").forEach(c=>c.style.display=c.innerText.toLowerCase().includes(q)?"":"none")};
@@ -391,9 +391,16 @@ function showOrders(){
 function openAdmin(){
   const pass=prompt("Admin password:");
   if(pass!=="NX-ADMIN-DEMO"){alert("Access denied.");return}
+  syncOrdersToAdmin();
   document.getElementById("adminOverlay").classList.remove("hidden");renderAdmin();
 }
 function closeAdmin(){document.getElementById("adminOverlay").classList.add("hidden")}
+function syncOrdersToAdmin(){
+  const db=nxDB();
+  const savedOrders=JSON.parse(localStorage.getItem("nx_orders")||"[]");
+  savedOrders.forEach(o=>{if(!db.orders.some(x=>x.id===o.id)){db.orders.unshift(o)}});
+  saveNXDB(db);
+}
 function renderAdmin(){
   const db=nxDB();
   document.getElementById("adminCustomers").textContent=db.users.length;
