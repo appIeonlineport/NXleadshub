@@ -362,12 +362,26 @@ function handleSignup(e){
   db.users.push({id:"CUS-"+Date.now(),name,email,password,createdAt:new Date().toISOString()});
   db.session=email; saveNXDB(db); renderAccount();
 }
-function handleLogin(e){
+async function handleLogin(e){
   e.preventDefault();
-  const email=document.getElementById("loginEmail").value.trim().toLowerCase(), password=document.getElementById("loginPassword").value;
-  const db=nxDB(), user=db.users.find(u=>u.email===email&&u.password===password);
-  if(!user){alert("Email or password is incorrect.");return}
-  db.session=email; saveNXDB(db); renderAccount();
+
+  const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+  const password = document.getElementById("loginPassword").value;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert(error.message || "Email or password is incorrect.");
+    return;
+  }
+
+  const db = nxDB();
+  db.session = data.user.email;
+  saveNXDB(db);
+  renderAccount();
 }
 function logoutAccount(){const db=nxDB();db.session=null;saveNXDB(db);renderAccount()}
 function renderAccount(){
