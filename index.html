@@ -354,13 +354,46 @@ function switchAuth(mode){
   document.getElementById("loginForm").classList.toggle("hidden",mode!=="login");
   document.getElementById("signupForm").classList.toggle("hidden",mode!=="signup");
 }
-function handleSignup(e){
+async function handleSignup(e){
   e.preventDefault();
-  const name=document.getElementById("signupName").value.trim(), email=document.getElementById("signupEmail").value.trim().toLowerCase(), password=document.getElementById("signupPassword").value;
+
+  const name=document.getElementById("signupName").value.trim();
+  const email=document.getElementById("signupEmail").value.trim().toLowerCase();
+  const password=document.getElementById("signupPassword").value;
+
+  const {data,error}=await supabaseClient.auth.signUp({
+    email,
+    password,
+    options:{
+      data:{name}
+    }
+  });
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
   const db=nxDB();
-  if(db.users.some(u=>u.email===email)){alert("An account with this email already exists.");return}
-  db.users.push({id:"CUS-"+Date.now(),name,email,password,createdAt:new Date().toISOString()});
-  db.session=email; saveNXDB(db); renderAccount();
+
+  if(!db.users.some(u=>u.email===email)){
+    db.users.push({
+      id:"CUS-"+Date.now(),
+      name,
+      email,
+      password:"",
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  if(data.session){
+    db.session=email;
+    saveNXDB(db);
+    renderAccount();
+  }else{
+    saveNXDB(db);
+    alert("Account created. Please verify your email, then sign in.");
+  }
 }
 async function handleLogin(e){
   e.preventDefault();
