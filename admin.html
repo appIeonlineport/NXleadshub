@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NX Leads Hub — Owner Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060811;--p:#0d1422;--l:#263653;--t:#eef4ff;--m:#8d9ab2;--c:#67e8f9}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 75% -10%,#25134e,transparent 30%),var(--bg);color:var(--t);font-family:Inter,Arial,sans-serif}.wrap{width:min(1120px,94vw);margin:auto;padding:28px 0}.card{background:linear-gradient(180deg,#0d1422,#0b101a);border:1px solid var(--l);border-radius:18px;padding:24px}.login{width:min(440px,100%);margin:12vh auto}.brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#67e8f9,#8b5cf6);font:900 13px "Space Grotesk";color:#fff}.brand b{display:block;font:800 19px "Space Grotesk"}.brand small{display:block;color:#7f91ad;font-size:8px;letter-spacing:1.4px;margin-top:3px}.login h1{font:800 27px "Space Grotesk";margin:20px 0 6px}.sub{color:var(--m);font-size:11px;line-height:1.6}label{display:block;color:#b9c6d9;font-size:11px;font-weight:700;margin:13px 0 6px}input{width:100%;height:45px;background:#07101d;color:#fff;border:1px solid #293b5a;border-radius:10px;padding:0 13px;outline:0}input:focus{border-color:var(--c);box-shadow:0 0 0 3px #67e8f914}button{font:inherit;cursor:pointer}.btn{border:0;border-radius:10px;padding:11px 14px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;font-weight:800}.full{width:100%;margin-top:14px}.ghost{background:#101c2e;border:1px solid #314665}.paymentBtn{padding:7px 9px;font-size:9px;white-space:nowrap}.msg{margin-top:12px;padding:10px;border-radius:9px;background:#101827;color:#9eb0c8;font-size:10px;line-height:1.5}.hidden{display:none!important}.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--l);padding-bottom:18px;margin-bottom:22px}.badge{font-size:9px;color:var(--c);border:1px solid #275267;border-radius:999px;padding:7px 9px}.head{display:flex;justify-content:space-between;gap:15px;margin-bottom:18px}.ey{color:var(--c);font-size:9px;font-weight:800;letter-spacing:1.8px}.head h1{font:800 28px "Space Grotesk";margin:4px 0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.stat{background:#091322;border:1px solid #223450;border-radius:13px;padding:13px}.stat small{display:block;color:#73849d;font-size:10px}.stat b{display:block;margin-top:5px;font:800 22px "Space Grotesk"}.tablewrap{overflow:auto;border:1px solid #223450;border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:820px}.table th,.table td{padding:12px;border-bottom:1px solid #1b2a42;text-align:left;font-size:11px}.table th{color:#8da0bb;background:#091322;font-size:9px;text-transform:uppercase}.pill{padding:5px 8px;border-radius:999px;background:#19253a;font-size:9px}.empty{text-align:center;padding:30px;color:#71819a;font-size:12px}@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}.wrap{padding:18px 0}}
+</style>
+</head>
+<body>
+<div id="loginView" class="wrap"><div class="card login">
+<div class="brand"><div class="mark">NX</div><div><b>NX Leads Hub</b><small>PRIVATE OWNER PORTAL</small></div></div>
+<h1>Owner Sign In</h1>
+<div class="sub">Private owner access. Your Supabase account must also be authorized in the <b>admin_users</b> table.</div>
+<form id="loginForm" novalidate>
+<label>Email</label><input id="email" type="email" autocomplete="username" required>
+<label>Password</label><input id="password" type="password" autocomplete="current-password" required>
+<button id="loginBtn" class="btn full" type="submit">Sign in to Owner Portal</button>
+</form>
+<div id="loginMsg" class="msg hidden"></div>
+</div></div>
+
+<div id="appView" class="wrap hidden">
+<div class="top"><div class="brand"><div class="mark">NX</div><div><b>NX Leads Hub</b><small>PRIVATE OWNER PORTAL</small></div></div>
+<div><span id="ownerEmail" class="badge"></span> <button id="signOut" class="btn ghost" type="button">Sign out</button></div></div>
+<div class="head"><div><div class="ey">PRIVATE CONTROL CENTER</div><h1>Orders Dashboard</h1><div class="sub">Orders loaded directly from the connected Supabase database.</div></div><span class="badge">SUPABASE</span></div>
+<div class="stats"><div class="stat"><small>Customers</small><b id="customers">0</b></div><div class="stat"><small>Orders</small><b id="orders">0</b></div><div class="stat"><small>Pending</small><b id="pending">0</b></div><div class="stat"><small>Revenue</small><b id="revenue">$0.00</b></div></div>
+<div class="card"><div class="tablewrap"><table class="table"><thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Amount</th><th>Status</th><th>Payment</th><th>Action</th><th>Delivery</th><th>Created</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty hidden">No orders found.</div></div><div id="appMsg" class="msg hidden"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const SUPABASE_URL="https://cflbppmzeauepzsydusf.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_r1tueBq4I7vmJhCJ-xiLpg_gJPmn1sI";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function showMsg(text,id){$(id).textContent=text;$(id).classList.remove("hidden")}
+async function isOwner(userId){
+  const r=await db.from("admin_users").select("user_id").eq("user_id",userId).maybeSingle();
+  return !r.error && !!r.data;
+}
+async function updateOrderStatus(orderId,status,button){
+  if(!orderId)return;
+  button.disabled=true;
+  const old=button.textContent;
+  button.textContent="Updating...";
+  try{
+    const r=await db.from("orders")
+      .update({status,updated_at:new Date().toISOString()})
+      .eq("id",orderId);
+    if(r.error)throw r.error;
+    await loadOrders();
+  }catch(err){
+    button.disabled=false;
+    button.textContent=old;
+    showMsg("Order status could not be updated: "+(err.message||"Update failed."),"appMsg");
+  }
+}
+async function markPaymentReceived(orderId,button){
+  return updateOrderStatus(orderId,"payment_confirmed",button);
+}
+
+async function saveDelivery(orderId,input,button){
+  const url=String(input.value||"").trim();
+  if(!url || !/^https?:\/\//i.test(url)){
+    showMsg("Enter a valid HTTPS/HTTP download URL before marking the order delivered.","appMsg");
+    return;
+  }
+  button.disabled=true; button.textContent="Saving...";
+  try{
+    const r=await db.from("orders").update({
+      download_url:url,
+      status:"delivered",
+      updated_at:new Date().toISOString()
+    }).eq("id",orderId);
+    if(r.error)throw r.error;
+    await loadOrders();
+  }catch(err){
+    button.disabled=false; button.textContent="Mark Delivered";
+    showMsg("Delivery could not be saved: "+(err.message||"Update failed."),"appMsg");
+  }
+}
+
+async function loadOrders(){
+  const r=await db.from("orders").select("id,order_number,customer_id,product_id,customer_email,amount_usd,status,download_url,created_at,updated_at").order("created_at",{ascending:false});
+  if(r.error){
+    $("rows").innerHTML="";
+    $("empty").classList.remove("hidden");
+    showMsg("Owner login succeeded, but orders are blocked by Supabase RLS: "+r.error.message,"appMsg");
+    return;
+  }
+  const a=r.data||[];
+  $("customers").textContent=new Set(a.map(x=>x.customer_email).filter(Boolean)).size;
+  $("orders").textContent=a.length;
+  $("pending").textContent=a.filter(x=>!["payment_confirmed","delivered","cancelled"].includes(String(x.status||"").toLowerCase())).length;
+  $("revenue").textContent="$"+a.reduce((s,x)=>s+Number(x.amount_usd||0),0).toFixed(2);
+  $("empty").classList.toggle("hidden",a.length>0);
+
+  $("rows").innerHTML=a.map(o=>{
+    const status=String(o.status||"");
+    const canConfirm=status.toLowerCase()==="awaiting_payment";
+    const sl=status.toLowerCase();
+    const paymentCell=sl==="awaiting_payment"
+      ? "<button class='btn ghost paymentBtn' type='button' data-order-id='"+esc(o.id)+"'>Mark Payment Received</button>"
+      : (["payment_confirmed","processing","delivered"].includes(sl)
+          ? "<span class='pill'>Received</span>"
+          : "<span class='pill'>—</span>");
+
+    let actionCell="<span class='pill'>—</span>";
+    let deliveryCell="<span class='pill'>—</span>";
+    if(sl==="payment_confirmed"){
+      actionCell="<button class='btn ghost statusBtn' type='button' data-order-id='"+esc(o.id)+"' data-next='processing'>Start Processing</button>";
+    }else if(sl==="processing"){
+      actionCell="<button class='btn ghost statusBtn' type='button' data-order-id='"+esc(o.id)+"' data-next='delivered'>Mark Delivered</button>";
+    }else if(sl==="delivered"){
+      actionCell="<span class='pill'>Completed</span>";
+    }
+    if(sl==="processing" || sl==="payment_confirmed"){
+      deliveryCell="<div style='display:flex;gap:6px;min-width:230px'><input class='deliveryInput' data-order-id='"+esc(o.id)+"' placeholder='https://download-link...' value='"+esc(o.download_url||"")+"' style='width:145px;height:30px;background:#07101d;color:#fff;border:1px solid #293b5a;border-radius:7px;padding:0 7px;font-size:9px'><button class='btn ghost deliverBtn' type='button' data-order-id='"+esc(o.id)+"'>Mark Delivered</button></div>";
+    }else if(sl==="delivered" && o.download_url){
+      deliveryCell="<a class='pill' href='"+esc(o.download_url)+"' target='_blank' rel='noopener'>Open File</a>";
+    }
+
+    return "<tr>"
+      +"<td>"+esc(o.order_number)+"</td>"
+      +"<td>"+esc(o.customer_email)+"</td>"
+      +"<td>"+esc(o.product_id||"Selected product")+"</td>"
+      +"<td>$"+Number(o.amount_usd||0).toFixed(2)+"</td>"
+      +"<td><span class='pill'>"+esc(status)+"</span></td>"
+      +"<td>"+paymentCell+"</td>"
+      +"<td>"+actionCell+"</td>"
+      +"<td>"+deliveryCell+"</td>"
+      +"<td>"+esc(o.created_at?new Date(o.created_at).toLocaleString():"—")+"</td>"
+      +"</tr>";
+  }).join("");
+
+  document.querySelectorAll(".paymentBtn").forEach(btn=>{
+    btn.addEventListener("click",()=>markPaymentReceived(btn.dataset.orderId,btn));
+  });
+  document.querySelectorAll(".statusBtn").forEach(btn=>{
+    btn.addEventListener("click",()=>updateOrderStatus(btn.dataset.orderId,btn.dataset.next,btn));
+  });
+  document.querySelectorAll(".deliverBtn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const input=document.querySelector('.deliveryInput[data-order-id="'+btn.dataset.orderId+'"]');
+      saveDelivery(btn.dataset.orderId,input,btn);
+    });
+  });
+}
+async function openApp(user){
+  if(!(await isOwner(user.id))){
+    await db.auth.signOut();
+    showMsg("This Supabase account is not authorized as an owner. Add its UUID to public.admin_users first.","loginMsg");
+    return;
+  }
+  $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("ownerEmail").textContent=user.email||"Owner";await loadOrders();
+}
+$("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();$("loginMsg").classList.add("hidden");$("loginBtn").disabled=true;$("loginBtn").textContent="Signing in...";
+  try{
+    const r=await db.auth.signInWithPassword({email:$("email").value.trim().toLowerCase(),password:$("password").value});
+    if(r.error){showMsg(r.error.message||"Sign in failed.","loginMsg");return}
+    await openApp(r.data.user);
+  }catch(err){showMsg(err.message||"Login failed. Please try again.","loginMsg")}
+  finally{$("loginBtn").disabled=false;$("loginBtn").textContent="Sign in to Owner Portal"}
+});
+$("signOut").addEventListener("click",async()=>{await db.auth.signOut();location.reload()});
+(async()=>{try{const r=await db.auth.getSession();if(r.data.session)await openApp(r.data.session.user)}catch(e){showMsg(e.message||"Could not restore session.","loginMsg")}})();
+</script>
+</body>
+</html>
