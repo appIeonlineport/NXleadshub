@@ -411,7 +411,7 @@ async function markPaid(){
       customer_id:currentUser.id,
       customer_email:email.value.trim().toLowerCase(),
       amount_usd:Number(selected[2]||0),
-      status:"Awaiting payment confirmation"
+      status:"awaiting_payment"
     };
     if(productId) order.product_id=productId;
 
